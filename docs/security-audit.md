@@ -1,13 +1,13 @@
 # Security audit data: skillbridge
 
-**TL;DR:** Static secret, workflow, and lockfile checks report no findings.
+**TL;DR:** Current static secret, workflow, and lockfile checks report no findings.
 
 <!-- wtfm:revision -->
-> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
-> Latest change: Git distribution and clean-copy verification documented
+> Documents **v0.1.0** (`6cc4c67+dirty`) · Doc revision **2** · Updated 2026-10-11
+> Latest change: Verified privacy fixes, cache recovery, and sanitized diagnostics
 <!-- /wtfm:revision -->
 
-This is not a security certification; see [verification.md](verification.md) for test scope.
+See [verification.md](verification.md) for the 29-test verification scope and limits.
 
 Documents **v0.1.0** · Collected 2026-10-11
 
@@ -21,7 +21,7 @@ Documents **v0.1.0** · Collected 2026-10-11
 
 ## Checks performed
 
-- Text files scanned for secret-like strings: 19
+- Text files scanned for secret-like strings: 20
 - Security policy (`SECURITY.md`): present
 - GitHub Actions workflows reviewed: 1
 - Lockfiles: package.json: package-lock.json
@@ -38,3 +38,14 @@ Not run. Re-run with `--run-audits` to query ecosystem advisory databases (uses 
 
 See [the security policy](../SECURITY.md). Do not post credentials or private skill
 content in public issues.
+
+## Privacy review scope
+
+Current-file checks do not cover commit identities, all GitHub logs, live private
+skills, or actual host storage. Historical author/committer identity remains in Git
+and existing Actions metadata. New commits use a GitHub noreply identity; this does
+not erase public copies of earlier metadata.
+
+Regression tests cover cleanup recovery after restart and remote-error redaction.
+Offline cache authorization and native permission-before-disclosure boundaries
+remain as documented in the security policy.

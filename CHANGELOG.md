@@ -22,6 +22,7 @@ All notable changes are documented here. This project follows Keep a Changelog.
 - Credential-file validation and reading use the same opened file handle.
 - Remote parsing, schema, integrity, and transport failures use fixed diagnostic messages without response bodies or private filenames.
 - Stale bundle keys are reconciled against the active catalog so failed cleanup is recovered after restart.
+- Refreshed the security record and user guides from verified privacy regression checks (`6cc4c67`).
 
 ### Fixed
 

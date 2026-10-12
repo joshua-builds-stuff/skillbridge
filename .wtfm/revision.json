@@ -9,51 +9,51 @@
       "updated": "2026-10-11"
     },
     "README.md": {
-      "commit": "4fd8f3e",
-      "content_hash": "ed0705760340d920",
-      "last_note": "Git distribution and clean-copy verification documented",
+      "commit": "6cc4c67+dirty",
+      "content_hash": "2b9dd7e8ee9bdc73",
+      "last_note": "Verified privacy fixes, cache recovery, and sanitized diagnostics",
       "product_version": "0.1.0",
-      "revision": 1,
+      "revision": 2,
       "updated": "2026-10-11"
     },
     "SECURITY.md": {
-      "commit": "4fd8f3e+dirty",
-      "content_hash": "53a9523f7eee5ff5",
-      "last_note": "Git distribution and clean-copy verification documented",
+      "commit": "6cc4c67+dirty",
+      "content_hash": "84580ffbad08ff9f",
+      "last_note": "Verified privacy fixes, cache recovery, and sanitized diagnostics",
       "product_version": "0.1.0",
-      "revision": 1,
+      "revision": 2,
       "updated": "2026-10-11"
     },
     "docs/implementation.md": {
-      "commit": "4fd8f3e+dirty",
-      "content_hash": "ed93e498e4df1752",
-      "last_note": "Git distribution and clean-copy verification documented",
+      "commit": "6cc4c67+dirty",
+      "content_hash": "5070c54f4b7f39e4",
+      "last_note": "Verified privacy fixes, cache recovery, and sanitized diagnostics",
       "product_version": "0.1.0",
-      "revision": 1,
+      "revision": 2,
       "updated": "2026-10-11"
     },
     "docs/security-audit.md": {
-      "commit": "4fd8f3e+dirty",
-      "content_hash": "299a29889d2de00c",
-      "last_note": "Git distribution and clean-copy verification documented",
+      "commit": "6cc4c67+dirty",
+      "content_hash": "061e060a78391f63",
+      "last_note": "Verified privacy fixes, cache recovery, and sanitized diagnostics",
       "product_version": "0.1.0",
-      "revision": 1,
+      "revision": 2,
       "updated": "2026-10-11"
     },
     "docs/usability.md": {
-      "commit": "4fd8f3e+dirty",
-      "content_hash": "78fff37109932691",
-      "last_note": "Git distribution and clean-copy verification documented",
+      "commit": "6cc4c67+dirty",
+      "content_hash": "3d23ce8f8d8c7dde",
+      "last_note": "Verified privacy fixes, cache recovery, and sanitized diagnostics",
       "product_version": "0.1.0",
-      "revision": 1,
+      "revision": 2,
       "updated": "2026-10-11"
     },
     "docs/verification.md": {
-      "commit": "4fd8f3e+dirty",
-      "content_hash": "b9947c45f7499385",
-      "last_note": "Git distribution and clean-copy verification documented",
+      "commit": "6cc4c67+dirty",
+      "content_hash": "4d73448dd6fe3fee",
+      "last_note": "Verified privacy fixes, cache recovery, and sanitized diagnostics",
       "product_version": "0.1.0",
-      "revision": 1,
+      "revision": 2,
       "updated": "2026-10-11"
     }
   },

@@ -3,8 +3,8 @@
 **TL;DR:** SkillBridge is an OpenCode V2 plugin that lists Executor skills and loads their instructions on demand. Clone this repository, build it, and configure the OpenCode backend to load the absolute local plugin directory. Distribution is through Git, not npm.
 
 <!-- wtfm:revision -->
-> Documents **v0.1.0** (`4fd8f3e`) · Doc revision **1** · Updated 2026-10-11
-> Latest change: Git distribution and clean-copy verification documented
+> Documents **v0.1.0** (`6cc4c67+dirty`) · Doc revision **2** · Updated 2026-10-11
+> Latest change: Verified privacy fixes, cache recovery, and sanitized diagnostics
 <!-- /wtfm:revision -->
 
 ```mermaid
@@ -94,6 +94,10 @@ HTTPS is required by default. Redirects are refused. Use a read-only Executor cr
 Polling picks up edits and deletions. Executor's get API returns a whole bundle, so the first file read also fetches the whole bundle. Each bundle is limited to 2048 files and 64 MiB; `SKILL.md` is limited to 512 KiB. HTTP responses are bounded to 96 MiB. Every file's byte count and SHA-256 digest must match the current manifest.
 
 Verified bundles and metadata are stored in OpenCode's plugin storage, partitioned by endpoint and credential fingerprint. Previously used revisions can load offline. Uncached revisions fail rather than fabricate content. Protect this storage: it contains skill content. Activation removes superseded endpoint/credential cache partitions from this plugin's location-scoped storage. Unloading cancels polling; the host disposes registrations.
+
+Startup and refresh remove stale bundle revisions, including cleanup interrupted
+by a previous process. Remote-error diagnostics omit response fragments and private
+filenames. Storage failures can delay deletion; backups remain outside this cleanup.
 
 Limits apply per bundle and response, not to the total cache. There is no aggregate memory/disk quota or global download-concurrency cap. Use a scoped credential and avoid selecting many large skills at once.
 

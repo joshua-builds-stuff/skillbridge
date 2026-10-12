@@ -3,8 +3,8 @@
 **TL;DR:** Build a Git checkout and load its absolute directory in your OpenCode V2 backend configuration. Select a qualified Executor skill, then use the file tool for its remote references.
 
 <!-- wtfm:revision -->
-> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
-> Latest change: Git distribution and clean-copy verification documented
+> Documents **v0.1.0** (`6cc4c67+dirty`) · Doc revision **2** · Updated 2026-10-11
+> Latest change: Verified privacy fixes, cache recovery, and sanitized diagnostics
 <!-- /wtfm:revision -->
 
 ## What you can do
@@ -100,6 +100,11 @@ These cases come from source validation and test fixtures, not a complete client
 | Duplicate Executor entries | Built-in Executor import also enabled | Choose one import mechanism unless duplicates are intentional. |
 
 If no entries appear, check that the actual backend loaded the built plugin directory and can reach Executor. The plugin does not add a separate status screen or remote/offline badges.
+
+Remote errors use fixed messages instead of response fragments or private filenames.
+Include the error category or HTTP status in a report, not private bundle contents.
+Stale bundle cleanup runs on startup and refresh. If storage fails, cleanup retries;
+this does not remove backups or revoke otherwise valid offline cached revisions.
 
 ## Security and help
 
