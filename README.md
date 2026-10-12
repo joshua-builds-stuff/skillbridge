@@ -113,30 +113,22 @@ The plugin therefore reads the same native Executor skill store through its
 read-only authenticated HTTP API, then registers each entry through
 `ctx.skill.transform`. No second MCP server is created.
 
-## Differences from the Shuvcode core implementation
+## Host integration limits
 
-The public plugin API does not expose MCP `skills/list`, `skills/get`, or
-`resources/read` on an existing host connection. This plugin therefore uses its
-own authenticated **Executor native HTTP API**, not the host's MCP connection.
-It does not need a second MCP server.
-
-Names are qualified rather than showing a fork-specific source chooser.
-The generic host picker does not show remote/offline badges. A virtual base
-path is displayed by the host; loaded instructions explicitly direct agents
-to the file tool instead. Bundles are not materialized, writable, or executable.
-There is no automatic per-file download or script execution. It supports native
-picker selections and slash commands; it does not add the fork's `$name`
-autocomplete behavior. Standard host skill permission prompts still apply.
+Skill names use `executor-org-` and `executor-user-` prefixes. The plugin does not
+add a source chooser, remote/offline badges, or custom autocomplete. The host
+displays a virtual path; loaded instructions direct agents to the file tool.
+Bundles are not materialized as writable or executable directories. Native skill
+selections and slash commands are supported. Standard host permission prompts apply.
 Permission gates disclosure to the model. The native skill tool's public
 `execute.before` hook runs before its permission check, so a denied direct
 native skill call may already have downloaded and verified the bundle into the
 protected host cache; the plugin cannot reverse that ordering through public
 APIs.
 
-Do not enable this alongside an OpenCode build with built-in Executor MCP skill import
-unless you intentionally want two entries per skill. Installing SkillBridge does
-not remove or disable core changes. Validate on an unpatched OpenCode V2 host
-before switching a production client.
+Do not enable multiple import mechanisms for the same Executor catalog unless
+duplicate entries are intentional. Validate the plugin on your intended OpenCode
+V2 backend before switching a production client.
 
 ## Development and verification
 

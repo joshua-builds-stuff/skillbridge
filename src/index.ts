@@ -131,7 +131,7 @@ export default Plugin.define({
       state.skills.forEach((skill) => {
         const candidate = state.bundles.get(id(skill))
         const loaded = candidate && revision(candidate) === revision(skill) ? candidate : undefined
-        // No MCP origin schema or other fork-only fields; works on upstream V2.
+        // Register only public OpenCode V2 skill fields.
         editor.add(Skill.Info.make({
           id: Skill.ID.make(id(skill)), name: Skill.Name.make(`executor-${skill.owner}-${skill.name}`),
           description: skill.description,
