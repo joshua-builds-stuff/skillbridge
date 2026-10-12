@@ -26,3 +26,4 @@ All notable changes are documented here. This project follows Keep a Changelog.
 - Refresh cleanup cannot delete a newly hydrated revision's cached bundle.
 - Cache cleanup retries survive persistence and registry reload failures.
 - Duplicate qualified skill IDs are rejected before registration.
+- Credential-file fixtures use the system temporary directory on clean CI runners.

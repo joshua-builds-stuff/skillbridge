@@ -3,6 +3,8 @@ import type { Plugin, Skill } from "@opencode/plugin"
 import plugin from "../src/index.js"
 import { digest } from "../src/catalog.js"
 import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 const originalFetch = globalThis.fetch
 const originalKey = process.env.EXECUTOR_SKILLS_API_KEY
@@ -212,7 +214,7 @@ test("a catalog rollback after failed reload reapplies registrations and retains
 })
 
 test("credential files are trimmed, permission checked, and must be regular absolute files", async () => {
-  const directory = await mkdtemp("/tmp/opencode/skillbridge-credentials-")
+  const directory = await mkdtemp(join(tmpdir(), "skillbridge-credentials-"))
   cleanups.push(() => rm(directory, {recursive: true, force: true}))
   const file = directory + "/key"
   await writeFile(file, "  file-only-test-key\n", {mode: 0o600})

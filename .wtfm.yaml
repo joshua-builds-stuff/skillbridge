@@ -5,7 +5,7 @@ project:
 execution_policy:
   trust: trusted-local
   network: none
-  env_allowlist: [PATH, LANG, NPM_CONFIG_CACHE]
+  env_allowlist: [PATH, LANG, NPM_CONFIG_CACHE, TMPDIR]
   secret_names: []
 
 verify:
