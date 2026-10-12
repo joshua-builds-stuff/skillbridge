@@ -3,8 +3,8 @@
 **TL;DR:** SkillBridge is an OpenCode V2 plugin that lists Executor skills and loads their instructions on demand. Clone this repository, build it, and configure the OpenCode backend to load the absolute local plugin directory. Distribution is through Git, not npm.
 
 <!-- wtfm:revision -->
-> Documents **v0.1.0** (`4fd8f3e`) · Doc revision **1** · Updated 2026-10-11
-> Latest change: Git distribution and clean-copy verification documented
+> Documents **v0.1.0** (`6cc4c67+dirty`) · Doc revision **2** · Updated 2026-10-11
+> Latest change: Verified privacy fixes, cache recovery, and sanitized diagnostics
 <!-- /wtfm:revision -->
 
 ```mermaid
@@ -95,6 +95,10 @@ Polling picks up edits and deletions. Executor's get API returns a whole bundle,
 
 Verified bundles and metadata are stored in OpenCode's plugin storage, partitioned by endpoint and credential fingerprint. Previously used revisions can load offline. Uncached revisions fail rather than fabricate content. Protect this storage: it contains skill content. Activation removes superseded endpoint/credential cache partitions from this plugin's location-scoped storage. Unloading cancels polling; the host disposes registrations.
 
+Startup and refresh remove stale bundle revisions, including cleanup interrupted
+by a previous process. Remote-error diagnostics omit response fragments and private
+filenames. Storage failures can delay deletion; backups remain outside this cleanup.
+
 Limits apply per bundle and response, not to the total cache. There is no aggregate memory/disk quota or global download-concurrency cap. Use a scoped credential and avoid selecting many large skills at once.
 
 **Permissions gate disclosure to the model, not retrieval or caching.** A denied call can still download and verify a bundle before the native permission check. See [security guidance](SECURITY.md).
@@ -109,34 +113,26 @@ The plugin therefore reads the same native Executor skill store through its
 read-only authenticated HTTP API, then registers each entry through
 `ctx.skill.transform`. No second MCP server is created.
 
-## Differences from the Shuvcode core implementation
+## Host integration limits
 
-The public plugin API does not expose MCP `skills/list`, `skills/get`, or
-`resources/read` on an existing host connection. This plugin therefore uses its
-own authenticated **Executor native HTTP API**, not the host's MCP connection.
-It does not need a second MCP server.
-
-Names are qualified rather than showing a fork-specific source chooser.
-The generic host picker does not show remote/offline badges. A virtual base
-path is displayed by the host; loaded instructions explicitly direct agents
-to the file tool instead. Bundles are not materialized, writable, or executable.
-There is no automatic per-file download or script execution. It supports native
-picker selections and slash commands; it does not add the fork's `$name`
-autocomplete behavior. Standard host skill permission prompts still apply.
+Skill names use `executor-org-` and `executor-user-` prefixes. The plugin does not
+add a source chooser, remote/offline badges, or custom autocomplete. The host
+displays a virtual path; loaded instructions direct agents to the file tool.
+Bundles are not materialized as writable or executable directories. Native skill
+selections and slash commands are supported. Standard host permission prompts apply.
 Permission gates disclosure to the model. The native skill tool's public
 `execute.before` hook runs before its permission check, so a denied direct
 native skill call may already have downloaded and verified the bundle into the
 protected host cache; the plugin cannot reverse that ordering through public
 APIs.
 
-Do not enable this alongside an OpenCode build with built-in Executor MCP skill import
-unless you intentionally want two entries per skill. Installing SkillBridge does
-not remove or disable core changes. Validate on an unpatched OpenCode V2 host
-before switching a production client.
+Do not enable multiple import mechanisms for the same Executor catalog unless
+duplicate entries are intentional. Validate the plugin on your intended OpenCode
+V2 backend before switching a production client.
 
 ## Development and verification
 
-The disposable-copy verification passes install, typecheck, all 20 tests, build,
+The disposable-copy verification passes install, typecheck, all 29 tests, build,
 entrypoint loading, and package dry-run checks. Tests use a simulated host, not a
 stock OpenCode integration test. See the [verification record](docs/verification.md).
 

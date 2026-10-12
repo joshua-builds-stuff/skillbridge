@@ -1,10 +1,10 @@
 # Verification
 
-**TL;DR:** A disposable copy passes all six required checks with 20 fixture tests.
+**TL;DR:** A disposable copy passes all six required checks with 29 fixture tests.
 
 <!-- wtfm:revision -->
-> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
-> Latest change: Git distribution and clean-copy verification documented
+> Documents **v0.1.0** (`6cc4c67+dirty`) · Doc revision **2** · Updated 2026-10-11
+> Latest change: Verified privacy fixes, cache recovery, and sanitized diagnostics
 <!-- /wtfm:revision -->
 
 This proves the build and simulated-host behavior, not every OpenCode client or platform.
@@ -15,7 +15,7 @@ This proves the build and simulated-host behavior, not every OpenCode client or 
 | --- | --- |
 | Clean dependency install | Pass: `npm ci --offline --ignore-scripts --no-audit --no-fund` |
 | Typecheck | Pass: `npm run typecheck` |
-| Fixture tests | Pass: `npm test`, 20 tests |
+| Fixture tests | Pass: `npm test`, 29 tests |
 | Build | Pass: `npm run build` |
 | Root entrypoint | Pass: `npm run test:entrypoint` |
 | Package dry run | Pass: `npm pack --dry-run` |
@@ -29,6 +29,10 @@ The separate advisory check queries the npm registry; it covers production depen
 The tests cover manifest integrity, binary and Unicode data, safe paths, duplicate
 catalog IDs, read-only transport, registration, permission-denial fixtures, concurrent
 hydration, offline reuse, refresh/cache races, cleanup retries, and credential files.
+
+Privacy regressions cover stale-cache recovery across restart, paginated and
+unchanged-catalog cleanup, and redaction of synthetic response and filename data
+from remote errors.
 
 ## Live-host scope
 

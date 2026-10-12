@@ -3,8 +3,8 @@
 **TL;DR:** Keep Executor tokens outside the repository and protect OpenCode's plugin storage. Native skill permissions gate disclosure to the model; they do not prevent prior bundle retrieval or caching.
 
 <!-- wtfm:revision -->
-> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
-> Latest change: Git distribution and clean-copy verification documented
+> Documents **v0.1.0** (`6cc4c67+dirty`) · Doc revision **2** · Updated 2026-10-11
+> Latest change: Verified privacy fixes, cache recovery, and sanitized diagnostics
 <!-- /wtfm:revision -->
 
 ## Credentials and transport
@@ -39,11 +39,19 @@ against a compromised service account or privileged local user.
 
 Use the host's documented storage-management procedure when removing sensitive cached content. There is no cache-management command supplied by this plugin.
 
+Startup and catalog refresh reconcile stored bundle keys with the active catalog.
+This recovers stale cleanup work after a restart. Storage failures can still delay
+deletion. Cleanup does not remove backups, or expire authorized offline revisions.
+
 ## Remote content and integrity
 
 The plugin validates catalog schemas, manifest paths, revisions, byte counts, and SHA-256 digests. It rejects duplicate or unsafe manifest paths, missing `SKILL.md`, invalid base64, stale bundles, and oversized data. Limits include 2048 files and 64 MiB per bundle, 512 KiB for `SKILL.md`, and 96 MiB per HTTP response.
 
 These checks detect corruption and inconsistent data. They do not authenticate content independently of the configured server or make remote instructions trustworthy. A compromised trusted endpoint can serve a matching malicious manifest and bundle.
+
+Remote transport, JSON, schema, and integrity diagnostics omit response fragments
+and remote filenames. This applies to plugin-generated errors, not to all host,
+storage-provider, or third-party logs.
 
 Treat remote skills as instructions from their publisher, not as security policy. Review risky instructions before following them. Bundles are not materialized as local directories. Virtual `/skillbridge/...` paths are display paths. Scripts are reference data; the plugin does not install or automatically execute them. An agent can still choose other tools in response to remote instructions, subject to the host's controls.
 
@@ -51,7 +59,7 @@ Treat remote skills as instructions from their publisher, not as security policy
 
 SkillBridge is an OpenCode V2 plugin, not a T3 Code frontend plugin. It does not change OpenCode or Executor permissions. The declared SDK peer range is not a tested version or platform matrix.
 
-Disposable-copy build and 20 fixture tests pass. Historical T3 Code smoke evidence
+Disposable-copy build and 29 fixture tests pass. Historical T3 Code smoke evidence
 predates the rename and is not a guarantee for a new installation. See
 [docs/security-audit.md](docs/security-audit.md),
 [docs/verification.md](docs/verification.md), and [CHANGELOG.md](CHANGELOG.md).

@@ -58,9 +58,12 @@ function harness(storage = new Map<string, unknown>()) {
       get: async (key: string) => storage.get(key),
       set: async (key: string, value: unknown) => {storage.set(key, value)},
       remove: async (key: string) => {storage.delete(key)},
-      scan: async ({prefix}: {prefix: string}) => ({
-        entries: [...storage].filter(([key]) => key.startsWith(prefix)).map(([key, value]) => ({key, value})),
-      }),
+      scan: async ({prefix, after, limit}: {prefix: string, after?: string, limit: number}) => {
+        const entries = [...storage].filter(([key]) => key.startsWith(prefix) && (!after || key > after))
+          .sort(([a], [b]) => a.localeCompare(b))
+        const page = entries.slice(0, limit).map(([key, value]) => ({key, value}))
+        return {entries: page, next: entries.length > limit ? page.at(-1)!.key : undefined}
+      },
     },
     skill: {
       transform: async (callback: typeof state.transform) => {state.transform = callback; await skillReload(); return registration()},
@@ -115,6 +118,113 @@ function deferred() {
 }
 
 const prompt = {prompt: {skills: [{id: "executor-org-demo"}]}}
+
+test("restart reconciles failed removals against the restored catalog while offline", async () => {
+  const poll = polling()
+  const first = harness()
+  let current = bundle()
+  globalThis.fetch = (async (url: string) => new Response(JSON.stringify(
+    url.endsWith("/api/skills") ? [current] : current))) as typeof fetch
+  await setup(first)
+  await first.hooks["prompt"](prompt)
+  const oldKey = [...first.storage.keys()].find((key) => key.includes("/bundle/"))!
+  first.ctx.storage.remove = async () => {throw new Error("removal failed")}
+  current = {...bundle(), description: "Updated revision"}
+  await poll()
+  await first.hooks["prompt"](prompt)
+  const currentKey = [...first.storage.keys()].find((key) => key.includes("/bundle/") && key !== oldKey)!
+  expect(first.storage.has(oldKey)).toBe(true)
+  await cleanups.pop()!()
+
+  let online = false
+  globalThis.fetch = (async () => {
+    if (!online) throw new Error("offline")
+    return new Response(JSON.stringify([current]))
+  }) as typeof fetch
+  const restarted = harness(first.storage)
+  const remove = restarted.ctx.storage.remove
+  let attempts = 0
+  restarted.ctx.storage.remove = async (key) => {
+    if (key === oldKey && ++attempts === 1) throw new Error("removal failed again")
+    return remove(key)
+  }
+  await setup(restarted)
+  expect(restarted.storage.has(oldKey)).toBe(true)
+  await restarted.hooks["prompt"](prompt)
+  expect(restarted.skills.get("executor-org-demo")?.description).toBe("Updated revision")
+  expect(restarted.storage.has(currentKey)).toBe(true)
+
+  online = true
+  await poll() // unchanged catalog retries the failed startup removal
+  expect(attempts).toBe(2)
+  expect(restarted.storage.has(oldKey)).toBe(false)
+  expect(restarted.storage.has(currentKey)).toBe(true)
+})
+
+test("unchanged refresh paginates orphan reconciliation and preserves current revisions", async () => {
+  const poll = polling()
+  const host = harness()
+  globalThis.fetch = (async (url: string) => new Response(JSON.stringify(
+    url.endsWith("/api/skills") ? [bundle()] : bundle()))) as typeof fetch
+  await setup(host)
+  await host.hooks["prompt"](prompt)
+  const currentKey = [...host.storage.keys()].find((key) => key.includes("/bundle/"))!
+  const prefix = currentKey.slice(0, currentKey.indexOf("/bundle/") + "/bundle/".length)
+  const orphans = Array.from({length: 205}, (_, index) => prefix + "executor-org-demo/orphan-" + String(index).padStart(3, "0"))
+  orphans.forEach((key) => host.storage.set(key, bundle()))
+  const scan = host.ctx.storage.scan
+  const cursors: Array<string | undefined> = []
+  host.ctx.storage.scan = async (input) => {
+    if (input.prefix === prefix) cursors.push(input.after)
+    return scan(input)
+  }
+  await poll()
+  expect(cursors).toHaveLength(3)
+  expect(cursors[0]).toBeUndefined()
+  expect(cursors.slice(1).every(Boolean)).toBe(true)
+  expect(orphans.every((key) => !host.storage.has(key))).toBe(true)
+  expect(host.storage.has(currentKey)).toBe(true)
+  await host.hooks["prompt"](prompt)
+
+  orphans.forEach((key) => host.storage.set(key, bundle()))
+  await cleanups.pop()!()
+  const restarted = harness(host.storage)
+  const restartScan = restarted.ctx.storage.scan
+  let pages = 0
+  restarted.ctx.storage.scan = async (input) => {
+    if (input.prefix === prefix) pages++
+    return restartScan(input)
+  }
+  globalThis.fetch = (async () => {throw new Error("offline")}) as typeof fetch
+  await setup(restarted)
+  expect(pages).toBe(3)
+  expect(orphans.every((key) => !host.storage.has(key))).toBe(true)
+  expect(host.storage.has(currentKey)).toBe(true)
+  await restarted.hooks["prompt"](prompt)
+})
+
+test("unchanged refresh retries a failed reconciliation scan", async () => {
+  const poll = polling()
+  const host = harness()
+  globalThis.fetch = (async (url: string) => new Response(JSON.stringify(
+    url.endsWith("/api/skills") ? [bundle()] : bundle()))) as typeof fetch
+  await setup(host)
+  await host.hooks["prompt"](prompt)
+  const currentKey = [...host.storage.keys()].find((key) => key.includes("/bundle/"))!
+  const orphan = currentKey + "-orphan"
+  host.storage.set(orphan, bundle())
+  const scan = host.ctx.storage.scan
+  let failed = false
+  host.ctx.storage.scan = async (input) => {
+    if (!failed) {failed = true; throw new Error("scan failed")}
+    return scan(input)
+  }
+  await poll()
+  expect(host.storage.has(orphan)).toBe(true)
+  await poll()
+  expect(host.storage.has(orphan)).toBe(false)
+  expect(host.storage.has(currentKey)).toBe(true)
+})
 
 test("hydration during a paused refresh retains the new persistent revision", async () => {
   const poll = polling()
@@ -310,7 +420,7 @@ test("offline verified bundles load across restarts, uncached bundles fail", asy
   const indexOnly = new Map([...first.storage].filter(([key]) => key.endsWith("catalog")))
   const third = harness(indexOnly)
   await setup(third)
-  await expect(third.hooks["prompt"]({prompt: {skills: [{id: "executor-org-demo"}]}})).rejects.toThrow("offline")
+  await expect(third.hooks["prompt"]({prompt: {skills: [{id: "executor-org-demo"}]}})).rejects.toThrow("Executor Skills request failed")
 })
 
 test("prunes cache partitions from superseded credentials", async () => {

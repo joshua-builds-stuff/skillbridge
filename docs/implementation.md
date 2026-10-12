@@ -3,8 +3,8 @@
 **TL;DR:** SkillBridge registers Executor skills through the public OpenCode V2 plugin API. `src/index.ts` manages registration, polling, credentials, and cache state; `src/catalog.ts` validates API data and bundle integrity.
 
 <!-- wtfm:revision -->
-> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
-> Latest change: Git distribution and clean-copy verification documented
+> Documents **v0.1.0** (`6cc4c67+dirty`) · Doc revision **2** · Updated 2026-10-11
+> Latest change: Verified privacy fixes, cache recovery, and sanitized diagnostics
 <!-- /wtfm:revision -->
 
 ## Architecture
@@ -59,6 +59,10 @@ keep stale cleanup separate from newly hydrated bundles. A retryable cleanup que
 retains work after storage or registry failures. Polling schedules a timeout after
 each refresh. Cleanup aborts network work and cancels the next poll.
 
+Stored keys in the active credential partition are also reconciled with the current
+catalog. Startup reconciliation recovers stale work lost when the previous process
+stopped before deletion. Current revision keys remain usable offline.
+
 ## Public interfaces
 
 | Interface | Input or identity | Result |
@@ -74,7 +78,7 @@ Loaded instructions strip leading frontmatter. They identify the remote source a
 ## Design decisions
 
 - **Direct API instead of host MCP internals:** The public plugin context does not expose the live MCP client's skill extension methods. See the [original rationale](../README.md#why-the-plugin-uses-executors-api).
-- **Qualified names:** Organization and personal entries use separate `executor-org-` and `executor-user-` IDs. This does not add a fork-specific source chooser.
+- **Qualified names:** Organization and personal entries use separate `executor-org-` and `executor-user-` IDs. The plugin does not add a source chooser.
 - **Lazy whole bundles:** The native get API returns a whole bundle. First use fetches it; startup fetches only the catalog.
 - **Manifest-bound cache:** Revisions include owner, name, description, frontmatter, and sorted file metadata. File ordering and timestamps do not define the revision.
 - **Native permission enforcement:** Custom tools delegate to the host's native skill executor. Retrieval can happen before permission denial; this is not a network-access permission gate.
@@ -100,7 +104,7 @@ npm run build
 npm run test:entrypoint
 ```
 
-Disposable-copy install, typecheck, all 20 fixture tests, build, entrypoint, and
+Disposable-copy install, typecheck, all 29 fixture tests, build, entrypoint, and
 package dry-run checks pass. Fixture tests are not a stock-host integration test.
 Historical live-host evidence predates the rename; see [verification scope](verification.md).
 
@@ -123,7 +127,7 @@ The declared SDK peer range is `>=2.0.17 <3`; development uses `2.0.17`. Do not 
 - A denied native or custom tool call can already have fetched and cached a bundle.
 - Offline use requires a cached catalog and the matching verified bundle revision.
 - Aggregate memory, disk cache, and concurrent downloads have no global quota. Per-bundle limits are not aggregate resource limits.
-- No remote/offline badges, fork-specific autocomplete, bundle installation, or automatic script execution are added.
+- No remote/offline badges, custom autocomplete, bundle installation, or automatic script execution are added.
 - T3 Code must connect to a backend that actually loads the plugin. This is not a T3 frontend extension.
 
 See [security policy](../SECURITY.md) and [change history](../CHANGELOG.md).
