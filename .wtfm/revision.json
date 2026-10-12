@@ -1,0 +1,61 @@
+{
+  "docs": {
+    "AUDIT.md": {
+      "commit": "4fd8f3e+dirty",
+      "content_hash": "b1f3692e534f1aff",
+      "last_note": "Git distribution and clean-copy verification documented",
+      "product_version": "0.1.0",
+      "revision": 1,
+      "updated": "2026-10-11"
+    },
+    "README.md": {
+      "commit": "4fd8f3e",
+      "content_hash": "ed0705760340d920",
+      "last_note": "Git distribution and clean-copy verification documented",
+      "product_version": "0.1.0",
+      "revision": 1,
+      "updated": "2026-10-11"
+    },
+    "SECURITY.md": {
+      "commit": "4fd8f3e+dirty",
+      "content_hash": "53a9523f7eee5ff5",
+      "last_note": "Git distribution and clean-copy verification documented",
+      "product_version": "0.1.0",
+      "revision": 1,
+      "updated": "2026-10-11"
+    },
+    "docs/implementation.md": {
+      "commit": "4fd8f3e+dirty",
+      "content_hash": "ed93e498e4df1752",
+      "last_note": "Git distribution and clean-copy verification documented",
+      "product_version": "0.1.0",
+      "revision": 1,
+      "updated": "2026-10-11"
+    },
+    "docs/security-audit.md": {
+      "commit": "4fd8f3e+dirty",
+      "content_hash": "299a29889d2de00c",
+      "last_note": "Git distribution and clean-copy verification documented",
+      "product_version": "0.1.0",
+      "revision": 1,
+      "updated": "2026-10-11"
+    },
+    "docs/usability.md": {
+      "commit": "4fd8f3e+dirty",
+      "content_hash": "78fff37109932691",
+      "last_note": "Git distribution and clean-copy verification documented",
+      "product_version": "0.1.0",
+      "revision": 1,
+      "updated": "2026-10-11"
+    },
+    "docs/verification.md": {
+      "commit": "4fd8f3e+dirty",
+      "content_hash": "b9947c45f7499385",
+      "last_note": "Git distribution and clean-copy verification documented",
+      "product_version": "0.1.0",
+      "revision": 1,
+      "updated": "2026-10-11"
+    }
+  },
+  "schema": 1
+}

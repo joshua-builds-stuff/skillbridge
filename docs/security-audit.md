@@ -1,6 +1,12 @@
 # Security audit data: skillbridge
 
 **TL;DR:** Static secret, workflow, and lockfile checks report no findings.
+
+<!-- wtfm:revision -->
+> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
+> Latest change: Git distribution and clean-copy verification documented
+<!-- /wtfm:revision -->
+
 This is not a security certification; see [verification.md](verification.md) for test scope.
 
 Documents **v0.1.0** · Collected 2026-10-11

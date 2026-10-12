@@ -2,6 +2,10 @@
 
 **TL;DR:** Keep Executor tokens outside the repository and protect OpenCode's plugin storage. Native skill permissions gate disclosure to the model; they do not prevent prior bundle retrieval or caching.
 
+<!-- wtfm:revision -->
+> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
+> Latest change: Git distribution and clean-copy verification documented
+<!-- /wtfm:revision -->
 
 ## Credentials and transport
 

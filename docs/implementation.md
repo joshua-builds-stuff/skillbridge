@@ -2,6 +2,10 @@
 
 **TL;DR:** SkillBridge registers Executor skills through the public OpenCode V2 plugin API. `src/index.ts` manages registration, polling, credentials, and cache state; `src/catalog.ts` validates API data and bundle integrity.
 
+<!-- wtfm:revision -->
+> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
+> Latest change: Git distribution and clean-copy verification documented
+<!-- /wtfm:revision -->
 
 ## Architecture
 

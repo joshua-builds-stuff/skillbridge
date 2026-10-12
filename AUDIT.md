@@ -1,6 +1,12 @@
 # SkillBridge review notes
 
 **TL;DR:** These are historical review notes. Use the current guides and verification
+
+<!-- wtfm:revision -->
+> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
+> Latest change: Git distribution and clean-copy verification documented
+<!-- /wtfm:revision -->
+
 record for the renamed package.
 
 This file preserves the initial review of the standalone plugin. Current setup

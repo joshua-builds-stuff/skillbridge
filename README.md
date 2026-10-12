@@ -2,6 +2,10 @@
 
 **TL;DR:** SkillBridge is an OpenCode V2 plugin that lists Executor skills and loads their instructions on demand. Clone this repository, build it, and configure the OpenCode backend to load the absolute local plugin directory. Distribution is through Git, not npm.
 
+<!-- wtfm:revision -->
+> Documents **v0.1.0** (`4fd8f3e`) · Doc revision **1** · Updated 2026-10-11
+> Latest change: Git distribution and clean-copy verification documented
+<!-- /wtfm:revision -->
 
 ```mermaid
 flowchart LR

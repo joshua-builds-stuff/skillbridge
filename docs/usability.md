@@ -2,6 +2,10 @@
 
 **TL;DR:** Build a Git checkout and load its absolute directory in your OpenCode V2 backend configuration. Select a qualified Executor skill, then use the file tool for its remote references.
 
+<!-- wtfm:revision -->
+> Documents **v0.1.0** (`4fd8f3e+dirty`) · Doc revision **1** · Updated 2026-10-11
+> Latest change: Git distribution and clean-copy verification documented
+<!-- /wtfm:revision -->
 
 ## What you can do
 
