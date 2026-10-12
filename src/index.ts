@@ -40,6 +40,34 @@ export default Plugin.define({
     if (cached.success) {
       state.skills = cached.data
       state.applied = revisionOfCatalog(cached.data)
+      await reconcileBundles()
+    }
+
+    function bundleKey(skill: Summary) {
+      return prefix + "bundle/" + id(skill) + "/" + digest(revision(skill))
+    }
+
+    async function reconcileBundles() {
+      // The persisted catalog is authoritative after restart; an in-memory
+      // removal queue alone cannot recover cleanup interrupted by a shutdown.
+      let after: string | undefined
+      try {
+        do {
+          const page = await ctx.storage.scan({prefix: prefix + "bundle/", after, limit: 100})
+          page.entries.forEach((entry) => state.cleanup.add(entry.key))
+          after = page.next
+        } while (after)
+      } catch (error) { warn(error) }
+      // Scan before deleting so removal cannot disturb page boundaries. Check
+      // live revisions, including bundles hydrated while reload/scan awaited.
+      const active = new Set(state.skills.map(bundleKey))
+      await Promise.all([...state.cleanup].map(async (key) => {
+        if (active.has(key)) { state.cleanup.delete(key); return }
+        try {
+          await ctx.storage.remove(key)
+          state.cleanup.delete(key)
+        } catch (error) { warn(error) }
+      }))
     }
 
     async function load(skillID: string, signal?: AbortSignal): Promise<Bundle> {
@@ -47,8 +75,8 @@ export default Plugin.define({
       if (!skill) throw new Error(`Executor skill not found: ${skillID}`)
       const retained = state.bundles.get(skillID)
       if (retained && revision(retained) === revision(skill)) return retained
-      const bundleKey = prefix + "bundle/" + skillID + "/" + digest(revision(skill))
-      const stored = await ctx.storage.get(bundleKey)
+      const storedKey = bundleKey(skill)
+      const stored = await ctx.storage.get(storedKey)
       const current = state.skills.find((entry) => id(entry) === skillID)
       if (!current) throw new Error(`Executor skill was removed while loading: ${skillID}`)
       if (revision(current) !== revision(skill)) return load(skillID, signal)
@@ -67,9 +95,9 @@ export default Plugin.define({
         if (!current) throw new Error(`Executor skill was removed while loading: ${skillID}`)
         if (revision(current) !== revision(loaded)) return load(skillID, signal)
         state.bundles.set(skillID, loaded)
-        await ctx.storage.set(bundleKey, JSON.parse(JSON.stringify(loaded))).catch(warn)
+        await ctx.storage.set(storedKey, JSON.parse(JSON.stringify(loaded))).catch(warn)
         const latest = state.skills.find((entry) => id(entry) === skillID)
-        if (!latest || revision(latest) !== revision(loaded)) state.cleanup.add(bundleKey)
+        if (!latest || revision(latest) !== revision(loaded)) state.cleanup.add(storedKey)
         return loaded
       })().finally(() => state.loading.delete(key))
       state.loading.set(key, loading)
@@ -83,7 +111,7 @@ export default Plugin.define({
         const current = skills.find((skill) => id(skill) === id(previous))
         return !current || revision(current) !== revision(previous)
       })
-      stale.forEach((skill) => state.cleanup.add(prefix + "bundle/" + id(skill) + "/" + digest(revision(skill))))
+      stale.forEach((skill) => state.cleanup.add(bundleKey(skill)))
       if (revisionOfCatalog(state.skills) !== next) state.applied = ""
       state.skills = skills
       state.bundles.forEach((bundle, key) => {
@@ -96,16 +124,7 @@ export default Plugin.define({
         await ctx.command.reload()
         state.applied = next
       }
-      // Keep failed removals queued even after a successful reload. Never delete
-      // a revision that became current again while a reload was being retried.
-      const active = new Set(skills.map((skill) => prefix + "bundle/" + id(skill) + "/" + digest(revision(skill))))
-      await Promise.all([...state.cleanup].map(async (key) => {
-        if (active.has(key)) { state.cleanup.delete(key); return }
-        try {
-          await ctx.storage.remove(key)
-          state.cleanup.delete(key)
-        } catch (error) { warn(error) }
-      }))
+      await reconcileBundles()
     }
 
     await ctx.skill.transform((editor) => {

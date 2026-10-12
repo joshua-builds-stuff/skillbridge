@@ -136,7 +136,7 @@ before switching a production client.
 
 ## Development and verification
 
-The disposable-copy verification passes install, typecheck, all 20 tests, build,
+The disposable-copy verification passes install, typecheck, all 29 tests, build,
 entrypoint loading, and package dry-run checks. Tests use a simulated host, not a
 stock OpenCode integration test. See the [verification record](docs/verification.md).
 

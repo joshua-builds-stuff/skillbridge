@@ -5,6 +5,16 @@ const MAX_BUNDLE_BYTES = 64 * 1024 * 1024
 const MAX_INSTRUCTION_BYTES = 512 * 1024
 const MAX_FRONTMATTER_BYTES = 256 * 1024
 
+class CatalogError extends Error {
+  constructor(readonly code: string, message: string) { super(message) }
+}
+
+function parse<T>(schema: z.ZodType<T>, value: unknown): T {
+  try { return schema.parse(value) } catch {
+    throw new CatalogError("INVALID_SCHEMA", "Executor Skills response failed schema validation")
+  }
+}
+
 const file = z.object({
   path: z.string().max(1024).refine((path) => path.split("/").every((part) =>
     part.length > 0 && part !== "." && part !== ".." && !/[\\\u0000-\u001f\u007f]/.test(part))),
@@ -39,14 +49,14 @@ export const revision = (skill: Summary) => JSON.stringify({
 })
 
 export function verify(value: unknown, expected: Summary): Bundle {
-  const result = bundle.parse(value)
-  if (revision(result) !== revision(expected)) throw new Error("Executor skill changed; refresh before loading")
+  const result = parse(bundle, value)
+  if (revision(result) !== revision(expected)) throw new CatalogError("CHANGED_REVISION", "Executor skill changed; refresh before loading")
   for (const file of result.files) {
     if (file.encoding === "base64" && !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(file.content))
-      throw new Error(`Executor skill file has invalid base64: ${file.path}`)
+      throw new CatalogError("INVALID_BASE64", "Executor skill file has invalid base64")
     const bytes = Buffer.from(file.content, file.encoding === "base64" ? "base64" : "utf8")
     if (bytes.length !== file.size || digest(bytes) !== file.digest)
-      throw new Error(`Executor skill file failed integrity verification: ${file.path}`)
+      throw new CatalogError("INTEGRITY", "Executor skill file failed integrity verification")
   }
   return result
 }
@@ -68,32 +78,46 @@ export function instructions(skill: Bundle) {
 export class ExecutorSkills {
   constructor(readonly url: string, readonly key: () => string, readonly fetcher = fetch) {}
   async request(path: string, signal?: AbortSignal): Promise<unknown> {
-    const key = this.key()
-    if (!key) throw new Error("SkillBridge: API key environment variable is not set")
-    const response = await this.fetcher(this.url + "/api/skills" + path, {
-      method: "GET", headers: {Authorization: `Bearer ${key}`}, redirect: "error",
-      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(30000)]) : AbortSignal.timeout(30000),
-    })
-    if (!response.ok) throw new Error(`Executor Skills API returned HTTP ${response.status}`)
-    // Bound the response before parsing, including base64 overhead for a 64 MiB bundle.
-    const reader = response.body?.getReader()
-    if (!reader) throw new Error("Executor Skills API returned an empty response")
-    const chunks: Uint8Array[] = []
-    let size = 0
+    const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(30000)]) : AbortSignal.timeout(30000)
     try {
-      while (true) {
-        const next = await reader.read()
-        if (next.done) break
-        size += next.value.length
-        if (size > 96 * 1024 * 1024) throw new Error("Executor Skills response exceeds 96 MiB")
-        chunks.push(next.value)
+      const key = this.key()
+      if (!key) throw new CatalogError("MISSING_KEY", "SkillBridge: API key environment variable is not set")
+      const response = await this.fetcher(this.url + "/api/skills" + path, {
+        method: "GET", headers: {Authorization: `Bearer ${key}`}, redirect: "error",
+        signal: requestSignal,
+      })
+      if (!response.ok) throw new CatalogError("HTTP", `Executor Skills API returned HTTP ${response.status}`)
+      // Bound the response before parsing, including base64 overhead for a 64 MiB bundle.
+      const reader = response.body?.getReader()
+      if (!reader) throw new CatalogError("EMPTY_RESPONSE", "Executor Skills API returned an empty response")
+      const chunks: Uint8Array[] = []
+      let size = 0
+      try {
+        while (true) {
+          const next = await reader.read()
+          if (next.done) break
+          size += next.value.length
+          if (size > 96 * 1024 * 1024) throw new CatalogError("RESPONSE_TOO_LARGE", "Executor Skills response exceeds 96 MiB")
+          chunks.push(next.value)
+        }
+        try { return JSON.parse(Buffer.concat(chunks).toString("utf8")) } catch {
+          throw new CatalogError("INVALID_JSON", "Executor Skills API returned invalid JSON")
+        }
+      } finally {
+        // Cleanup must neither expose transport details nor replace the request outcome.
+        try { await reader.cancel() } catch {}
       }
-      return JSON.parse(Buffer.concat(chunks).toString("utf8"))
-    } finally {
-      await reader.cancel()
+    } catch (error) {
+      if (requestSignal.aborted) {
+        const aborted = new CatalogError("ABORTED", "Executor Skills request aborted")
+        aborted.name = "AbortError"
+        throw aborted
+      }
+      if (error instanceof CatalogError) throw error
+      throw new CatalogError("TRANSPORT", "Executor Skills request failed")
     }
   }
-  async list(signal?: AbortSignal) { return catalog.parse(await this.request("", signal)) }
+  async list(signal?: AbortSignal) { return parse(catalog, await this.request("", signal)) }
   async get(skill: Summary, signal?: AbortSignal) {
     return verify(await this.request(`/${skill.owner}/${encodeURIComponent(skill.name)}`, signal), skill)
   }

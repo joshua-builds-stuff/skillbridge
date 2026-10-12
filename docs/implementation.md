@@ -59,6 +59,10 @@ keep stale cleanup separate from newly hydrated bundles. A retryable cleanup que
 retains work after storage or registry failures. Polling schedules a timeout after
 each refresh. Cleanup aborts network work and cancels the next poll.
 
+Stored keys in the active credential partition are also reconciled with the current
+catalog. Startup reconciliation recovers stale work lost when the previous process
+stopped before deletion. Current revision keys remain usable offline.
+
 ## Public interfaces
 
 | Interface | Input or identity | Result |
@@ -100,7 +104,7 @@ npm run build
 npm run test:entrypoint
 ```
 
-Disposable-copy install, typecheck, all 20 fixture tests, build, entrypoint, and
+Disposable-copy install, typecheck, all 29 fixture tests, build, entrypoint, and
 package dry-run checks pass. Fixture tests are not a stock-host integration test.
 Historical live-host evidence predates the rename; see [verification scope](verification.md).
 
